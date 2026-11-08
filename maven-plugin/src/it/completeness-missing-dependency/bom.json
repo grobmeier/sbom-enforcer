@@ -1,0 +1,1 @@
+{"bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1, "metadata": {"component": {"type": "application", "group": "example", "name": "app", "version": "1", "purl": "pkg:maven/example/app@1"}}}

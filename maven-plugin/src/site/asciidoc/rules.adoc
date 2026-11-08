@@ -220,3 +220,28 @@ The `distribution-intake` external reference is usually protected by authenticat
 * **Type**: `List<String>`
 * **Required**: `No`
 * **Default**: `[distribution-intake]`
+
+[#completeness]
+== <completeness>
+
+The rule checks whether the SBOM describes the current Maven module and includes its resolved compile and runtime dependencies, including transitive dependencies.
+It excludes provided, test, and system dependencies. Extra SBOM components are allowed.
+Dependency matching uses group ID, artifact ID, version, artifact type, and classifier.
+The rule makes no network requests and does not require checksums.
+It does not inspect the contents of packaged or shaded artifacts.
+
+Use the goal parameter `requireSbom` to fail when no supported SBOM is attached. Its default is `false`.
+Configure both settings to prevent a missing SBOM from passing silently:
+
+[source,xml]
+----
+<configuration>
+  <requireSbom>true</requireSbom>
+  <rules>
+    <completeness/>
+  </rules>
+</configuration>
+----
+
+Generate and attach a CycloneDX SBOM with `makeBom` in the `package` phase, then run `check` in `verify`.
+Each checked module needs its own SBOM. An aggregate SBOM does not replace the module SBOMs.

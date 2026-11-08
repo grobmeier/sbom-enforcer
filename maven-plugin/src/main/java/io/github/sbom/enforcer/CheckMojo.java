@@ -16,6 +16,7 @@
 package io.github.sbom.enforcer;
 
 import io.github.sbom.enforcer.internal.Artifacts;
+import io.github.sbom.enforcer.rules.CompletenessRule;
 import io.github.sbom.enforcer.support.DefaultBomBuilderRequest;
 import java.io.File;
 import java.nio.file.Path;
@@ -57,7 +58,10 @@ import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
  *     See <a href="https://sbom-enforcer.github.io/maven-plugin/rules.html">Rules</a> for a list of available rules.
  * </p>
  */
-@Mojo(name = "check", defaultPhase = LifecyclePhase.VERIFY)
+@Mojo(
+        name = "check",
+        defaultPhase = LifecyclePhase.VERIFY,
+        requiresDependencyResolution = org.apache.maven.plugins.annotations.ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class CheckMojo extends AbstractMojo {
 
     /**
@@ -66,6 +70,10 @@ public class CheckMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "false")
     private boolean usePrivateLocalRepo;
+
+    /** Fail when the current module has no attached supported SBOM. */
+    @Parameter(defaultValue = "false")
+    private boolean requireSbom;
 
     /**
      * Configuration of the rules to execute.
@@ -145,12 +153,17 @@ public class CheckMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         List<? extends EnforcerRule> rules = createEnforcerRules();
 
+        boolean checked = false;
         for (Artifact artifact : project.getAttachedArtifacts()) {
-            checkArtifact(artifact, rules);
+            checked |= checkArtifact(artifact, rules);
+        }
+        if (requireSbom && !checked) {
+            throw new MojoFailureException("No supported SBOM attached to " + project.getId()
+                    + "; generate and attach a CycloneDX XML or JSON SBOM with classifier cyclonedx before check.");
         }
     }
 
-    private void checkArtifact(Artifact bomArtifact, List<? extends EnforcerRule> rules)
+    private boolean checkArtifact(Artifact bomArtifact, List<? extends EnforcerRule> rules)
             throws MojoExecutionException, MojoFailureException {
         org.eclipse.aether.artifact.Artifact mainBillOfMaterials = Artifacts.toArtifact(bomArtifact);
         for (BomBuilder bomBuilder : bomBuilders) {
@@ -177,9 +190,10 @@ public class CheckMojo extends AbstractMojo {
                 } catch (BomBuildingException e) {
                     throw new MojoFailureException("Failed to parse BOM artifact " + mainBillOfMaterials, e);
                 }
-                break;
+                return true;
             }
         }
+        return false;
     }
 
     private LocalRepositoryManager createLocalRepositoryManager() throws MojoExecutionException {
@@ -203,6 +217,9 @@ public class CheckMojo extends AbstractMojo {
             try {
                 EnforcerRule rule = container.lookup(EnforcerRule.class, ruleConfig.getName());
                 componentConfigurator.configureComponent(rule, ruleConfig, evaluator, realm);
+                if (rule instanceof CompletenessRule completeness) {
+                    completeness.setProject(project);
+                }
                 enforcerRules.add(rule);
             } catch (ComponentLookupException e) {
                 throw new MojoExecutionException(
@@ -213,6 +230,10 @@ public class CheckMojo extends AbstractMojo {
             }
         }
         return enforcerRules;
+    }
+
+    public void setRequireSbom(boolean requireSbom) {
+        this.requireSbom = requireSbom;
     }
 
     public void setUsePrivateLocalRepo(boolean usePrivateLocalRepo) {
