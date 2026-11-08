@@ -19,22 +19,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>io.github.sbom-enforcer</groupId>
-    <artifactId>sbom-enforcer-parent</artifactId>
+    <groupId>de.grobmeier</groupId>
+    <artifactId>sbom-verifier-parent</artifactId>
     <version>${revision}</version>
   </parent>
 
-  <artifactId>sbom-enforcer-maven-plugin</artifactId>
+  <artifactId>sbom-verifier-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
-  <name>SBOM Enforcer Maven Plugin</name>
+  <name>SBOM Verifier Maven Plugin</name>
   <description>Performs a configurable list of checks on generated Software Bills of Materials (SBOMs).</description>
-  <url>https://sbom-enforcer.github.io/maven-plugin</url>
+  <url>https://grobmeier.solutions/solutions/sbom-enforcer/</url>
 
   <distributionManagement>
     <site>
       <id>site</id>
       <name>Website</name>
-      <url>https://sbom-enforcer.github.io/maven-plugin</url>
+      <url>https://grobmeier.solutions/solutions/sbom-enforcer/</url>
     </site>
   </distributionManagement>
 

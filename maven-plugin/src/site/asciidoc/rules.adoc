@@ -15,7 +15,7 @@
 ////
 = Rules
 
-By default, the SBOM Enforcer Maven Plugin offers the following rules.
+By default, the SBOM Verifier Maven Plugin offers the following rules.
 
 [#checksum]
 == <checksum>

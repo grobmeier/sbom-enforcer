@@ -18,7 +18,7 @@
 <site xmlns="http://maven.apache.org/SITE/2.0.0"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd"
-      name="SBOM Enforcer :: Maven Plugin">
+      name="SBOM Verifier :: Maven Plugin">
   <skin>
     <groupId>org.apache.maven.skins</groupId>
     <artifactId>maven-fluido-skin</artifactId>
@@ -26,14 +26,14 @@
   </skin>
   <body>
     <breadcrumbs>
-      <item name="SBOM Enforcer" href="../index.html"/>
+      <item name="SBOM Verifier" href="../index.html"/>
       <item name="Maven Plugin" href="./index.html"/>
     </breadcrumbs>
     <menu name="Documentation">
       <item name="Introduction" href="./index.html"/>
       <item name="Usage" href="./usage.html"/>
       <item name="Goals" href="./plugin-info.html">
-        <item name="sbom-enforcer:check" href="./check-mojo.html"/>
+        <item name="sbom-verifier:check" href="./check-mojo.html"/>
       </item>
       <item name="Rules" href="./rules.html">
         <item name="checksum" href="./rules.html#checksum"/>

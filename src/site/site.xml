@@ -18,7 +18,7 @@
 <site xmlns="http://maven.apache.org/SITE/2.0.0"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/SITE/2.0.0 https://maven.apache.org/xsd/site-2.0.0.xsd"
-      name="SBOM Enforcer">
+      name="SBOM Verifier">
   <skin>
     <groupId>org.apache.maven.skins</groupId>
     <artifactId>maven-fluido-skin</artifactId>
@@ -26,7 +26,7 @@
   </skin>
   <body>
     <breadcrumbs>
-      <item name="SBOM Enforcer" href="./index.html"/>
+      <item name="SBOM Verifier" href="./index.html"/>
     </breadcrumbs>
     <menu name="Documentation">
       <item name="Welcome" href="./index.html"/>
