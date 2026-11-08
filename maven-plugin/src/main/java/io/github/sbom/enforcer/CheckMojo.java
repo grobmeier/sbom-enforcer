@@ -17,6 +17,7 @@ package io.github.sbom.enforcer;
 
 import io.github.sbom.enforcer.internal.Artifacts;
 import io.github.sbom.enforcer.support.DefaultBomBuilderRequest;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +83,7 @@ public class CheckMojo extends AbstractMojo {
      * Path to a local Maven repository to use if `usePrivateLocalRepo` is true.
      */
     @Parameter(defaultValue = "${project.build.directory}/sbom-enforcer/repository")
-    protected Path privateLocalRepoPath;
+    protected File privateLocalRepoPath;
 
     /**
      * The current Maven project.
@@ -183,7 +184,7 @@ public class CheckMojo extends AbstractMojo {
 
     private LocalRepositoryManager createLocalRepositoryManager() throws MojoExecutionException {
         try {
-            LocalRepository repository = new LocalRepository(privateLocalRepoPath.toFile());
+            LocalRepository repository = new LocalRepository(privateLocalRepoPath);
             return localRepositoryManagerFactory.newInstance(repoSession, repository);
         } catch (NoLocalRepositoryManagerException e) {
             throw new MojoExecutionException(e);
@@ -219,7 +220,7 @@ public class CheckMojo extends AbstractMojo {
     }
 
     public void setPrivateLocalRepoPath(Path privateLocalRepoPath) {
-        this.privateLocalRepoPath = privateLocalRepoPath;
+        this.privateLocalRepoPath = privateLocalRepoPath.toFile();
     }
 
     public void setRules(PlexusConfiguration rules) {

@@ -48,10 +48,12 @@ is supported.
         <goal>check</goal>
       </goals>
       <configuration>
-        <!--1-->
-        <checksum/>
-        <!--2-->
-        <verifyReferences/>
+        <rules>
+          <!--1-->
+          <checksum/>
+          <!--2-->
+          <validateReferences/>
+        </rules>
       </configuration>
     </executions>
   </plugin>
