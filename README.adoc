@@ -15,48 +15,79 @@
 ////
 = SBOM Enforcer Maven Plugin
 
-image:https://img.shields.io/github/license/sbom-enforcer/sbom-enforcer[GitHub License]
-image:https://img.shields.io/github/actions/workflow/status/sbom-enforcer/sbom-enforcer/build.yaml[GitHub Actions Workflow Status]
-image:https://codecov.io/gh/sbom-enforcer/sbom-enforcer/graph/badge.svg?token=B7X35ZAM2W[Codecov,link=https://codecov.io/gh/sbom-enforcer/sbom-enforcer]
-image:https://img.shields.io/maven-central/v/io.github.sbom-enforcer/sbom-enforcer-maven-plugin[Maven Central Version]
+image:https://img.shields.io/badge/license-Apache--2.0-blue.svg[Apache License 2.0,link=https://www.apache.org/licenses/LICENSE-2.0]
+image:https://github.com/grobmeier/sbom-enforcer/actions/workflows/build.yaml/badge.svg?branch=main[Build status,link=https://github.com/grobmeier/sbom-enforcer/actions/workflows/build.yaml]
 
-The SBOM Enforcer Maven Plugin allows you to perform a set of custom checks on the SBOM produced by your build.
+Check the CycloneDX SBOM attached to a Maven build before publication.
 
-See
-https://sbom-enforcer.github.io/maven-plugin/index.html[the project webpage] for more details.
+* `completeness`: check project identity and coverage of resolved compile/runtime dependencies, including transitive dependencies. Provided, test, and system scopes are excluded. Extra components are allowed.
+* `checksum`: verify checksums recorded in the SBOM against dependency artifacts.
+* `validateReferences`: check external URLs. HTTP 429, HTTP 5xx, and connection failures warn by default. Set `failOnUnavailable=true` to fail on unavailable references. Dependency findings also require `failOnDependencies=true`.
 
-== QuickStart
+The `check` goal runs in `verify`. Set `requireSbom=true` to fail when no supported SBOM is attached. The default is `false`.
 
-This plugin checks the quality of SBOMs attached to your builds.
-To use it, you need to:
+See https://grobmeier.solutions/solutions/sbom-enforcer/[the project website] and link:maven-plugin/src/site/asciidoc/rules.adoc[the current rule reference].
 
-. Add a plugin execution to generate an SBOM.
-Currently only the
-https://github.com/CycloneDX/cyclonedx-maven-plugin[CycloneDX Maven Plugin]
-is supported.
-. Add a plugin execution of the `sbom-enforcer-maven-plugin`:
+== Install the current source
+
+Completeness and reference-availability handling are included in the current source. They are not included in the original published `0.2.0` release. Use Java 21 to build and install the current `0.2.1-SNAPSHOT` locally:
+
+[source,shell]
+----
+git clone https://github.com/grobmeier/sbom-enforcer.git
+cd sbom-enforcer
+./mvnw -B install
+----
+
+== Configure your Maven project
+
+Add both plugins under `<build><plugins>` in each module you want to check. CycloneDX attaches the SBOM during `package`; SBOM Enforcer checks it during `verify`.
 
 [source,xml]
 ----
-  <plugin>
-    <groupId>io.github.sbom-enforcer</groupId>
-    <artifactId>sbom-enforcer-maven-plugin</artifactId>
-    <version>0.2.0</version>
-    <executions>
+<plugin>
+  <groupId>org.cyclonedx</groupId>
+  <artifactId>cyclonedx-maven-plugin</artifactId>
+  <version>2.9.1</version>
+  <executions>
+    <execution>
+      <id>make-sbom</id>
+      <phase>package</phase>
+      <goals><goal>makeBom</goal></goals>
+    </execution>
+  </executions>
+</plugin>
+<plugin>
+  <groupId>io.github.sbom-enforcer</groupId>
+  <artifactId>sbom-enforcer-maven-plugin</artifactId>
+  <version>0.2.1-SNAPSHOT</version>
+  <executions>
+    <execution>
       <id>check-sbom</id>
-      <goals>
-        <goal>check</goal>
-      </goals>
+      <phase>verify</phase>
+      <goals><goal>check</goal></goals>
       <configuration>
+        <requireSbom>true</requireSbom>
         <rules>
-          <!--1-->
+          <completeness/>
           <checksum/>
-          <!--2-->
-          <validateReferences/>
+          <validateReferences>
+            <failOnDependencies>false</failOnDependencies>
+            <failOnUnavailable>false</failOnUnavailable>
+          </validateReferences>
         </rules>
       </configuration>
-    </executions>
-  </plugin>
+    </execution>
+  </executions>
+</plugin>
 ----
-<1> See https://sbom-enforcer.github.io/maven-plugin/usage.html#verify-dependency-checksums[verify dependency checksums] for more options.
-<2> See https://sbom-enforcer.github.io/maven-plugin/usage.html#verify-links-to-external-references[verify links to external references] for more options.
+
+Run `mvn verify` in your project. A clean CI runner needs the plugin installed before it can resolve the local snapshot. If the module skips deployment, set CycloneDX's `skipNotDeployed` to `false` to generate its SBOM.
+
+== Scope
+
+Completeness compares the Maven dependency graph with the SBOM. It does not inspect packaged or shaded archive contents, assess vulnerabilities, or establish CRA conformity.
+
+The rule passed against JJSON and Time & Bill, including 228-component XML and JSON SBOMs from Time & Bill. Integration tests assert failures for a missing SBOM and an omitted dependency.
+
+The fork preserves the Apache 2.0 license and original contributor notices. See https://github.com/sbom-enforcer/sbom-enforcer[the original project] for its release history.
