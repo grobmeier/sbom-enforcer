@@ -21,7 +21,7 @@
 This plugin by default analyzes the SBOM artifact attached to the build.
 To use it, add both the
 https://cyclonedx.github.io/cyclonedx-maven-plugin/[CycloneDX Maven Plugin]
-and the SBOM Enforcer Maven Plugin to your build:
+and the SBOM Verifier Maven Plugin to your build:
 
 [source,xml,subs="+attributes"]
 ----
@@ -41,8 +41,8 @@ and the SBOM Enforcer Maven Plugin to your build:
 
   <!-- Enforce quality of SBOM -->
   <plugin>
-    <groupId>io.github.sbom-enforcer</groupId>
-    <artifactId>sbom-enforcer-maven-plugin</artifactId>
+    <groupId>de.grobmeier</groupId>
+    <artifactId>sbom-verifier-maven-plugin</artifactId>
     <version>{project-version}</version>
     <executions>
       <id>check-sbom</id>

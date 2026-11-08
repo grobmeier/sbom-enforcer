@@ -13,9 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////
-= SBOM Enforcer Maven Plugin
+= SBOM Verifier Maven Plugin
 
-The SBOM Enforcer Maven Plugin aims to be the equivalent of the
+The SBOM Verifier Maven Plugin aims to be the equivalent of the
 https://maven.apache.org/enforcer/maven-enforcer-plugin/index.html[Apache Maven Enforcer Plugin]
 for checking the quality of SBOM your project produces.
 

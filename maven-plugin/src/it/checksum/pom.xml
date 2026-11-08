@@ -20,14 +20,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>io.github.sbom-enforcer</groupId>
+  <groupId>de.grobmeier</groupId>
   <artifactId>checksum</artifactId>
   <version>1</version>
   <packaging>jar</packaging>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <sbom-enforcer.version>@project.version@</sbom-enforcer.version>
+    <sbom-verifier.version>@project.version@</sbom-verifier.version>
   </properties>
 
   <build>
@@ -57,9 +57,9 @@
       </plugin>
 
       <plugin>
-        <groupId>io.github.sbom-enforcer</groupId>
-        <artifactId>sbom-enforcer-maven-plugin</artifactId>
-        <version>${sbom-enforcer.version}</version>
+        <groupId>de.grobmeier</groupId>
+        <artifactId>sbom-verifier-maven-plugin</artifactId>
+        <version>${sbom-verifier.version}</version>
         <executions>
           <execution>
             <id>check-sbom</id>
