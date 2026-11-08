@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ////
-= SBOM Enforcer Maven Plugin
+= SBOM Verifier Maven Plugin
 
 image:https://img.shields.io/badge/license-Apache%202.0-blue.svg[Apache License 2.0,link=https://www.apache.org/licenses/LICENSE-2.0]
 image:https://github.com/grobmeier/sbom-enforcer/actions/workflows/build.yaml/badge.svg?branch=main[Build status,link=https://github.com/grobmeier/sbom-enforcer/actions/workflows/build.yaml]
@@ -30,7 +30,7 @@ See https://grobmeier.solutions/solutions/sbom-enforcer/[the project website] an
 
 == Install the current source
 
-Completeness and reference-availability handling are included in the current source. They are not included in the original published `0.2.0` release. Use Java 21 to build and install the current `0.2.1-SNAPSHOT` locally:
+Completeness and reference-availability handling are included in the current source. They are not included in the original published `0.2.0` release. Use Java 21 to build and install the current `0.3.0-SNAPSHOT` locally:
 
 [source,shell]
 ----
@@ -41,7 +41,7 @@ cd sbom-enforcer
 
 == Configure your Maven project
 
-Add both plugins under `<build><plugins>` in each module you want to check. CycloneDX attaches the SBOM during `package`; SBOM Enforcer checks it during `verify`.
+Add both plugins under `<build><plugins>` in each module you want to check. CycloneDX attaches the SBOM during `package`; SBOM Verifier checks it during `verify`.
 
 [source,xml]
 ----
@@ -58,9 +58,9 @@ Add both plugins under `<build><plugins>` in each module you want to check. Cycl
   </executions>
 </plugin>
 <plugin>
-  <groupId>io.github.sbom-enforcer</groupId>
-  <artifactId>sbom-enforcer-maven-plugin</artifactId>
-  <version>0.2.1-SNAPSHOT</version>
+  <groupId>de.grobmeier</groupId>
+  <artifactId>sbom-verifier-maven-plugin</artifactId>
+  <version>0.3.0-SNAPSHOT</version>
   <executions>
     <execution>
       <id>check-sbom</id>
@@ -91,3 +91,9 @@ Completeness compares the Maven dependency graph with the SBOM. It does not insp
 The rule passed against JJSON and Time & Bill, including 228-component XML and JSON SBOMs from Time & Bill. Integration tests assert failures for a missing SBOM and an omitted dependency.
 
 The fork preserves the Apache 2.0 license and original contributor notices. See https://github.com/sbom-enforcer/sbom-enforcer[the original project] for its release history.
+
+== Migrate from SBOM Enforcer
+
+Use `de.grobmeier:sbom-verifier-maven-plugin:0.3.0-SNAPSHOT` after installing this source build. Rule names and settings remain the same. Java extensions must update imports from `io.github.sbom.enforcer` to `de.grobmeier.sbom.verifier` and recompile. The plugin goal prefix is now `sbom-verifier`.
+
+The repository URL remains https://github.com/grobmeier/sbom-enforcer[the existing fork]. The original published coordinates remain separate from this renamed project. This snapshot is not published to Maven Central.
