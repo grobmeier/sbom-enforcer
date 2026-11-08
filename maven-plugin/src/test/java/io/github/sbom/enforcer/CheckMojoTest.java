@@ -151,6 +151,21 @@ class CheckMojoTest {
     }
 
     @Test
+    void missingSbomFailsOnlyWhenRequired() throws Exception {
+        CheckMojo mojo = createCheckMojo();
+        mojo.execute();
+        mojo.setRequireSbom(true);
+        Assertions.assertThatThrownBy(mojo::execute).hasMessageContaining("No supported SBOM attached");
+    }
+
+    @Test
+    void completenessRuleReceivesProjectContext() throws Exception {
+        CheckMojo mojo = createCheckMojo();
+        mojo.addRule(fromString("<completeness/>"));
+        assertThat(mojo.createEnforcerRules()).hasSize(1);
+    }
+
+    @Test
     void createEnforcerRules_checksum() throws Exception {
         CheckMojo mojo = createCheckMojo();
         mojo.addRule(fromString("<checksum/>"));
