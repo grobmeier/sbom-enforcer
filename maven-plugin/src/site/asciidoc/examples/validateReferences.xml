@@ -23,6 +23,8 @@
       <checkDependencies>true</checkDependencies>
       <!-- Warn instead of failing if external references of dependencies are broken -->
       <failOnDependencies>false</failOnDependencies>
+      <!-- Warn when a reference is unavailable because of HTTP 429, HTTP 5xx, or a connection failure -->
+      <failOnUnavailable>false</failOnUnavailable>
       <!-- Don't fail on authentication or authorization errors -->
       <failOnAuth>false</failOnAuth>
       <!-- Fail on 30x redirects -->

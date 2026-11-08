@@ -73,7 +73,7 @@
       <purl>pkg:maven/org.apache.logging.log4j/log4j-api@2.24.3?type=jar</purl>
       <externalReferences>
         <reference type="vulnerability-assertion">
-          <url>https://logging.apache.org/cyclonedx/vdr.xml</url>
+          <url>http://127.0.0.1:1/unavailable</url>
         </reference>
         <reference type="website">
           <url>https://logging.apache.org/log4j/2.x/</url>

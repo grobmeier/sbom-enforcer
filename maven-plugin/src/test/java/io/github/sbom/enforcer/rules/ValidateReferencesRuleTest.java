@@ -25,6 +25,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sun.net.httpserver.HttpServer;
 import io.github.sbom.enforcer.BillOfMaterials;
 import io.github.sbom.enforcer.Component;
 import io.github.sbom.enforcer.rules.ValidateReferencesRule.HttpUrlChecker;
@@ -62,24 +63,35 @@ class ValidateReferencesRuleTest {
     private static final URI URI_302 = URI.create("https://example/302");
     private static final URI URI_401 = URI.create("https://example/401");
     private static final URI URI_403 = URI.create("https://example/403");
+    private static final URI URI_404 = URI.create("https://example/404");
+    private static final URI URI_408 = URI.create("https://example/408");
+    private static final URI URI_429 = URI.create("https://example/429");
+    private static final URI URI_500 = URI.create("https://example/500");
+    private static final URI URI_503 = URI.create("https://example/503");
     private static final URI URI_EXCEPTION = URI.create("https://example/exception");
 
     private static final String SSH_URL = "ssh://git@example/repo.git";
     private static final String INVALID_URL = "invalid url";
 
-    static Stream<Arguments> urlChecker_works() {
-        return Stream.of(
-                Arguments.of("https://logging.apache.org/log4j/2.x/index.html", HttpURLConnection.HTTP_OK),
-                Arguments.of("https://logging.apache.org/log4j/2.x", HttpURLConnection.HTTP_MOVED_PERM),
-                Arguments.of("https://logging.apache.org/not-found", HttpURLConnection.HTTP_NOT_FOUND));
-    }
-
-    @ParameterizedTest
-    @MethodSource
-    void urlChecker_works(String link, int expectedCode) throws IOException {
-        URL url = new URL(link);
-        JreHttpUrlChecker urlChecker = new JreHttpUrlChecker(mock(Logger.class));
-        assertThat(urlChecker.getResponseCode(url)).isEqualTo(expectedCode);
+    @Test
+    void urlChecker_works() throws IOException {
+        HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+        for (int code : new int[] {200, 301, 404}) {
+            server.createContext("/" + code, exchange -> {
+                exchange.sendResponseHeaders(code, -1);
+                exchange.close();
+            });
+        }
+        server.start();
+        try {
+            JreHttpUrlChecker urlChecker = new JreHttpUrlChecker(mock(Logger.class));
+            for (int code : new int[] {200, 301, 404}) {
+                URL url = new URL("http://127.0.0.1:" + server.getAddress().getPort() + "/" + code);
+                assertThat(urlChecker.getResponseCode(url)).isEqualTo(code);
+            }
+        } finally {
+            server.stop(0);
+        }
     }
 
     @Test
@@ -102,6 +114,11 @@ class ValidateReferencesRuleTest {
         when(urlChecker.getResponseCode(URI_302.toURL())).thenReturn(302);
         when(urlChecker.getResponseCode(URI_401.toURL())).thenReturn(401);
         when(urlChecker.getResponseCode(URI_403.toURL())).thenReturn(403);
+        when(urlChecker.getResponseCode(URI_404.toURL())).thenReturn(404);
+        when(urlChecker.getResponseCode(URI_408.toURL())).thenReturn(408);
+        when(urlChecker.getResponseCode(URI_429.toURL())).thenReturn(429);
+        when(urlChecker.getResponseCode(URI_500.toURL())).thenReturn(500);
+        when(urlChecker.getResponseCode(URI_503.toURL())).thenReturn(503);
         when(urlChecker.getResponseCode(URI_EXCEPTION.toURL())).thenThrow(new IOException("Test exception"));
         return urlChecker;
     }
@@ -131,17 +148,18 @@ class ValidateReferencesRuleTest {
         rule.setFailOnRedirect(failOnRedirect);
         rule.setFailOnAuth(failOnAuth);
 
-        String message = rule.validateReference(location);
+        ValidateReferencesRule.ReferenceFinding finding = rule.validateReference(location);
         if (failure) {
-            assertThat(message).as("error message").isNotNull().contains("Broken external reference");
+            assertThat(finding).as("finding").isNotNull();
+            assertThat(finding.message()).contains("Broken external reference");
         } else {
-            assertThat(message).as("error message").isNull();
+            assertThat(finding).as("finding").isNull();
         }
     }
 
     static Stream<Arguments> validateReference_failedConnection() {
         return Stream.of(
-                Arguments.of(URI_EXCEPTION.toASCIIString(), "Failed to connect"),
+                Arguments.of(URI_EXCEPTION.toASCIIString(), "Unavailable external reference"),
                 Arguments.of(INVALID_URL, "not a valid URI"));
     }
 
@@ -152,10 +170,9 @@ class ValidateReferencesRuleTest {
         Logger logger = mock(Logger.class);
         ValidateReferencesRule rule = new ValidateReferencesRule(logger, urlChecker);
 
-        assertThat(rule.validateReference(location))
-                .as("error message")
-                .isNotNull()
-                .contains(errorMessage);
+        ValidateReferencesRule.ReferenceFinding finding = rule.validateReference(location);
+        assertThat(finding).as("finding").isNotNull();
+        assertThat(finding.message()).contains(errorMessage);
     }
 
     @ParameterizedTest
@@ -171,9 +188,9 @@ class ValidateReferencesRuleTest {
 
         int i;
         for (i = 0; i < rule.maxFailuresPerHost; i++) {
-            assertThat(rule.validateReference(URI_EXCEPTION.toASCIIString()))
-                    .as("error message on attempt %d", i + 1)
-                    .contains("Failed to connect");
+            assertThat(rule.validateReference(URI_EXCEPTION.toASCIIString()).message())
+                    .as("finding on attempt %d", i + 1)
+                    .contains("Unavailable external reference");
         }
         assertThat(rule.validateReference(URI_EXCEPTION.toASCIIString()))
                 .as("error message on attempt %d", i + 1)
@@ -211,7 +228,7 @@ class ValidateReferencesRuleTest {
         rule.setCheckDependencies(checkDependencies);
         rule.setFailOnDependencies(failOnDependencies);
         // Create BOM
-        BillOfMaterials bom = createMockBillOfMaterials(Map.of(), Map.of("website", URI_EXCEPTION.toASCIIString()));
+        BillOfMaterials bom = createMockBillOfMaterials(Map.of(), Map.of("website", URI_404.toASCIIString()));
 
         if (checkDependencies && failOnDependencies) {
             assertThatThrownBy(() -> rule.execute(bom)).isInstanceOf(MojoFailureException.class);
@@ -219,14 +236,14 @@ class ValidateReferencesRuleTest {
             assertDoesNotThrow(() -> rule.execute(bom));
         }
         if (checkDependencies) {
-            verify(urlChecker, times(1)).getResponseCode(URI_EXCEPTION.toURL());
+            verify(urlChecker, times(1)).getResponseCode(URI_404.toURL());
         } else {
             verify(urlChecker, never()).getResponseCode(any());
         }
     }
 
     static Stream<Arguments> failsOnMainComponent() {
-        return Stream.of(Arguments.of(URI_EXCEPTION, true), Arguments.of(URI_200, false));
+        return Stream.of(Arguments.of(URI_404, true), Arguments.of(URI_200, false));
     }
 
     @ParameterizedTest
@@ -245,6 +262,66 @@ class ValidateReferencesRuleTest {
         } else {
             assertDoesNotThrow(() -> rule.execute(bom));
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://example/429", "https://example/500", "https://example/503", "https://example/exception"})
+    void unavailableReferencesWarnByDefault(String location) throws IOException {
+        HttpUrlChecker urlChecker = createMockHttpUrlChecker();
+        Logger logger = mock(Logger.class);
+        ValidateReferencesRule rule = new ValidateReferencesRule(logger, urlChecker);
+        BillOfMaterials bom = createMockBillOfMaterials(Map.of("website", location), Map.of());
+
+        assertDoesNotThrow(() -> rule.execute(bom));
+        verify(logger).warn(org.mockito.ArgumentMatchers.startsWith("Unavailable external reference"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://example/429", "https://example/500", "https://example/503", "https://example/exception"})
+    void unavailableReferencesFailInStrictMode(String location) throws IOException {
+        HttpUrlChecker urlChecker = createMockHttpUrlChecker();
+        ValidateReferencesRule rule = new ValidateReferencesRule(mock(Logger.class), urlChecker);
+        rule.setFailOnUnavailable(true);
+        BillOfMaterials bom = createMockBillOfMaterials(Map.of("website", location), Map.of());
+
+        assertThatThrownBy(() -> rule.execute(bom))
+                .isInstanceOf(MojoFailureException.class)
+                .hasMessageContaining("Unavailable external reference")
+                .hasMessageContaining(location);
+    }
+
+    @Test
+    void unavailableDependencyStillFollowsFailOnDependencies() throws IOException {
+        HttpUrlChecker urlChecker = createMockHttpUrlChecker();
+        ValidateReferencesRule rule = new ValidateReferencesRule(mock(Logger.class), urlChecker);
+        rule.setFailOnUnavailable(true);
+        BillOfMaterials bom = createMockBillOfMaterials(Map.of(), Map.of("website", URI_503.toASCIIString()));
+
+        assertDoesNotThrow(() -> rule.execute(bom));
+        rule.setFailOnDependencies(true);
+        assertThatThrownBy(() -> rule.execute(bom))
+                .isInstanceOf(MojoFailureException.class)
+                .hasMessageContaining("Unavailable external reference (503)");
+    }
+
+    @Test
+    void status408RemainsBroken() throws IOException {
+        ValidateReferencesRule rule = new ValidateReferencesRule(mock(Logger.class), createMockHttpUrlChecker());
+        assertThat(rule.validateReference(URI_408.toASCIIString()).unavailable()).isFalse();
+    }
+
+    @Test
+    void skippedReferencesAreReported() throws IOException {
+        HttpUrlChecker urlChecker = mock(HttpUrlChecker.class);
+        when(urlChecker.getResponseCode(any(URL.class))).thenThrow(new IOException("Test failure"));
+        Logger logger = mock(Logger.class);
+        ValidateReferencesRule rule = new ValidateReferencesRule(logger, urlChecker);
+        BillOfMaterials bom = createMockBillOfMaterials(
+                Map.of("one", "https://example/1", "two", "https://example/2", "three", "https://example/3", "four", "https://example/4"),
+                Map.of());
+
+        assertDoesNotThrow(() -> rule.execute(bom));
+        verify(logger).warn("Skipped 1 external reference(s) for host example after 3 connection failures");
     }
 
     static Stream<Arguments> checkIncludeExcludeLogic() {

@@ -65,7 +65,16 @@ If `true`, the rule will also check the external references from dependency comp
 | `0.2.0`
 |
 If `true`, the build will also fail if a broken link is encountered in a dependency component. +
-Otherwise, the problem is only logged. +
+Unavailable dependency references can fail only when `failOnUnavailable` is also `true`. +
+Otherwise, the finding is logged. +
+**Default**: `false`
+
+| `<<validate-references-fail-on-unavailable>>`
+| `boolean`
+| `0.3.0`
+|
+If `true`, HTTP 429, HTTP 5xx, and connection failures can fail the build. +
+The `failOnDependencies` setting still applies to dependency components. +
 **Default**: `false`
 
 | `<<validate-references-fail-on-redirect>>`
@@ -128,7 +137,20 @@ If `true`, the rule will also check the external references from dependency comp
 ==== <failOnDependencies>
 
 If `true`, the build will also fail if a broken link is encountered in a dependency component.
-Otherwise, the problem is only logged.
+Unavailable dependency references can fail only when `failOnUnavailable` is also `true`.
+Otherwise, the finding is logged.
+
+* **Type**: `boolean`
+* **Required**: `No`
+* **Default**: `false`
+
+[#validate-references-fail-on-unavailable]
+==== <failOnUnavailable>
+
+HTTP 429, HTTP 5xx, and connection failures do not prove that a reference is broken.
+The rule reports these references as unavailable and logs a warning by default.
+If `true`, this setting makes unavailable references fail the build.
+For dependency components, `failOnDependencies` must also be `true`.
 
 * **Type**: `boolean`
 * **Required**: `No`
@@ -156,7 +178,8 @@ If `true`, the rule will fail if any reference returns a `401` or `403` code.
 ==== <maxFailuresPerHost>
 
 Maximum number of IO errors for each HTTP domain.
-After the limit has been reached, the rule will ignore links to that HTTP domain.
+After the limit has been reached, the rule skips more links to that HTTP domain.
+It reports the number of skipped references in a warning.
 
 * **Type**: `int`
 * **Required**: `No`

@@ -70,9 +70,11 @@
             <configuration>
               <rules>
                 <validateReferences>
-                  <failOnAuth>true</failOnAuth>
-                  <failOnDependencies>true</failOnDependencies>
-                  <failOnRedirect>true</failOnRedirect>
+                  <checkDependencies>false</checkDependencies>
+                  <failOnUnavailable>true</failOnUnavailable>
+                  <includes>
+                    <include>vulnerability-assertion</include>
+                  </includes>
                 </validateReferences>
               </rules>
             </configuration>

@@ -180,6 +180,9 @@ class CheckMojoTest {
         assertThat(actualRule.isFailOnDependencies())
                 .as("failOnDependencies")
                 .isEqualTo(expectedRule.isFailOnDependencies());
+        assertThat(actualRule.isFailOnUnavailable())
+                .as("failOnUnavailable")
+                .isEqualTo(expectedRule.isFailOnUnavailable());
         assertThat(actualRule.getMaxFailuresPerHost())
                 .as("maxFailuresPerHost")
                 .isEqualTo(expectedRule.getMaxFailuresPerHost());
@@ -195,6 +198,7 @@ class CheckMojoTest {
                       <checkDependencies>false</checkDependencies>
                       <failOnAuth>true</failOnAuth>
                       <failOnDependencies>true</failOnDependencies>
+                      <failOnUnavailable>true</failOnUnavailable>
                       <failOnRedirect>true</failOnRedirect>
                       <maxFailuresPerHost>5</maxFailuresPerHost>
                       <timeoutMs>1000</timeoutMs>
@@ -216,12 +220,13 @@ class CheckMojoTest {
         assertThat(rules.get(0)).isInstanceOf(ValidateReferencesRule.class);
 
         VerifyReferencesConfiguration expected = new VerifyReferencesConfiguration(
-                false, true, true, true, 5, 1000, Set.of("foo", "bar"), Set.of("baz"));
+                false, true, true, true, true, 5, 1000, Set.of("foo", "bar"), Set.of("baz"));
         ValidateReferencesRule rule = (ValidateReferencesRule) rules.get(0);
         assertThat(rule.isCheckDependencies()).as("checkDependencies").isEqualTo(expected.checkDependencies());
         assertThat(rule.isFailOnAuth()).as("failOnAuth").isEqualTo(expected.failOnAuth());
         assertThat(rule.isFailOnRedirect()).as("failOnRedirect").isEqualTo(expected.failOnRedirect());
         assertThat(rule.isFailOnDependencies()).as("failOnDependencies").isEqualTo(expected.failOnDependencies());
+        assertThat(rule.isFailOnUnavailable()).as("failOnUnavailable").isEqualTo(expected.failOnUnavailable());
         assertThat(rule.getMaxFailuresPerHost()).as("maxFailuresPerHost").isEqualTo(expected.maxFailuresPerHost());
         assertThat(rule.getTimeoutMs()).as("timeoutMs").isEqualTo(expected.timeoutMs());
         assertThat(rule.getIncludes()).as("includes").isEqualTo(expected.includes());
@@ -233,6 +238,7 @@ class CheckMojoTest {
             boolean failOnAuth,
             boolean failOnRedirect,
             boolean failOnDependencies,
+            boolean failOnUnavailable,
             int maxFailuresPerHost,
             int timeoutMs,
             Set<String> includes,

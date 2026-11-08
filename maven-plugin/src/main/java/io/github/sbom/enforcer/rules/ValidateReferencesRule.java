@@ -52,7 +52,10 @@ public class ValidateReferencesRule implements EnforcerRule {
     private final Logger logger;
     private final HttpUrlChecker urlChecker;
     private final Map<String, Integer> failureCountByHost = new HashMap<>();
+    private final Map<String, Integer> skippedByHost = new HashMap<>();
     private final Map<URI, Integer> responseCodeCache = new HashMap<>();
+
+    record ReferenceFinding(String message, boolean unavailable) {}
 
     /**
      * If {@code true}, the rule will fail if any reference returns a `401` or `403` code.
@@ -76,6 +79,12 @@ public class ValidateReferencesRule implements EnforcerRule {
      * </p>
      */
     private boolean failOnDependencies = false;
+
+    /**
+     * If true, HTTP 429, HTTP 5xx, and connection failures can fail the build.
+     * Dependency findings still follow failOnDependencies.
+     */
+    private boolean failOnUnavailable = false;
 
     /**
      * Maximum number of IO errors for each HTTP domain.
@@ -122,19 +131,18 @@ public class ValidateReferencesRule implements EnforcerRule {
 
     @Override
     public void execute(BillOfMaterials bom) throws MojoFailureException {
-        List<String> errors = new ArrayList<>(validateReferences(bom.getComponent()));
-        List<String> dependencyErrors = new ArrayList<>();
+        skippedByHost.clear();
+        List<String> errors = new ArrayList<>();
+        reportFindings(validateReferences(bom.getComponent()), true, errors);
         if (checkDependencies) {
             for (Component dependency : bom.getDependencies()) {
-                dependencyErrors.addAll(validateReferences(dependency));
-            }
-
-            if (failOnDependencies) {
-                errors.addAll(dependencyErrors);
-            } else {
-                dependencyErrors.stream().sorted().forEach(logger::warn);
+                reportFindings(validateReferences(dependency), failOnDependencies, errors);
             }
         }
+        skippedByHost.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> logger.warn("Skipped " + entry.getValue() + " external reference(s) for host "
+                        + entry.getKey() + " after " + maxFailuresPerHost + " connection failures"));
 
         if (!errors.isEmpty()) {
             String message = errors.stream()
@@ -145,13 +153,23 @@ public class ValidateReferencesRule implements EnforcerRule {
         }
     }
 
-    private List<String> validateReferences(Component component) {
+    private void reportFindings(List<ReferenceFinding> findings, boolean canFail, List<String> errors) {
+        for (ReferenceFinding finding : findings) {
+            if (canFail && (!finding.unavailable() || failOnUnavailable)) {
+                errors.add(finding.message());
+            } else {
+                logger.warn(finding.message());
+            }
+        }
+    }
+
+    private List<ReferenceFinding> validateReferences(Component component) {
         return component.getExternalReferences().stream()
                 .filter(this::shouldCheck)
-                .<String>mapMulti((ref, consumer) -> {
-                    String errorMessage = validateReference(ref.getLocation());
-                    if (errorMessage != null) {
-                        consumer.accept(errorMessage);
+                .<ReferenceFinding>mapMulti((ref, consumer) -> {
+                    ReferenceFinding finding = validateReference(ref.getLocation());
+                    if (finding != null) {
+                        consumer.accept(finding);
                     }
                 })
                 .toList();
@@ -163,7 +181,7 @@ public class ValidateReferencesRule implements EnforcerRule {
     }
 
     @Nullable
-    String validateReference(String location) {
+    ReferenceFinding validateReference(String location) {
         try {
             URI uri = new URI(location);
             String scheme = uri.getScheme();
@@ -172,7 +190,7 @@ public class ValidateReferencesRule implements EnforcerRule {
                 // 1. Skip if error limit exceeded
                 Integer failureCount = failureCountByHost.get(url.getAuthority());
                 if (failureCount != null && failureCount >= maxFailuresPerHost) {
-                    logger.debug("Maximum IO errors reached for host: " + url.getAuthority());
+                    skippedByHost.merge(url.getAuthority(), 1, Integer::sum);
                     return null;
                 }
                 // 2. Check the URL
@@ -184,19 +202,24 @@ public class ValidateReferencesRule implements EnforcerRule {
                     } else {
                         logger.debug("Using cached response for URL: " + url);
                     }
-                    if (HttpURLConnection.HTTP_OK != responseCode
-                            && (failOnAuth || !RESPONSE_CODES_AUTH.contains(responseCode))
-                            && (failOnRedirect || !RESPONSE_CODES_REDIRECT.contains(responseCode))) {
-                        return "Broken external reference (" + responseCode + "): " + location;
+                    if (responseCode == HttpURLConnection.HTTP_OK
+                            || (!failOnAuth && RESPONSE_CODES_AUTH.contains(responseCode))
+                            || (!failOnRedirect && RESPONSE_CODES_REDIRECT.contains(responseCode))) {
+                        return null;
                     }
+                    if (responseCode == 429 || (responseCode >= 500 && responseCode <= 599)) {
+                        return new ReferenceFinding("Unavailable external reference (" + responseCode + "): "
+                                + location, true);
+                    }
+                    return new ReferenceFinding("Broken external reference (" + responseCode + "): " + location, false);
                 } catch (IOException e) {
                     failureCountByHost.merge(url.getAuthority(), 1, Integer::sum);
-                    return "Failed to connect to URL: " + location;
+                    return new ReferenceFinding("Unavailable external reference (connection failed): " + location, true);
                 }
             }
             return null;
         } catch (URISyntaxException | MalformedURLException e) {
-            return "Reference location is not a valid URI: " + location;
+            return new ReferenceFinding("Reference location is not a valid URI: " + location, false);
         }
     }
 
@@ -230,6 +253,14 @@ public class ValidateReferencesRule implements EnforcerRule {
 
     public void setFailOnDependencies(boolean failOnDependencies) {
         this.failOnDependencies = failOnDependencies;
+    }
+
+    public boolean isFailOnUnavailable() {
+        return failOnUnavailable;
+    }
+
+    public void setFailOnUnavailable(boolean failOnUnavailable) {
+        this.failOnUnavailable = failOnUnavailable;
     }
 
     public int getMaxFailuresPerHost() {

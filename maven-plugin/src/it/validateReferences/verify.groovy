@@ -17,5 +17,4 @@
 File buildLog = new File(basedir, "build.log")
 assert buildLog.exists()
 List<String> errors = buildLog.readLines().findAll { it.startsWith("[ERROR]") }
-assert errors.contains('[ERROR] * Broken external reference (404): https://errorprone.info/error_prone_annotations')
-assert errors.contains('[ERROR] * Broken external reference (404): https://github.com/google/error-prone/error_prone_annotations')
+assert errors.contains('[ERROR] * Unavailable external reference (connection failed): http://127.0.0.1:1/unavailable')
