@@ -15,7 +15,7 @@
 ////
 = SBOM Enforcer Maven Plugin
 
-image:https://img.shields.io/badge/license-Apache--2.0-blue.svg[Apache License 2.0,link=https://www.apache.org/licenses/LICENSE-2.0]
+image:https://img.shields.io/badge/license-Apache%202.0-blue.svg[Apache License 2.0,link=https://www.apache.org/licenses/LICENSE-2.0]
 image:https://github.com/grobmeier/sbom-enforcer/actions/workflows/build.yaml/badge.svg?branch=main[Build status,link=https://github.com/grobmeier/sbom-enforcer/actions/workflows/build.yaml]
 
 Check the CycloneDX SBOM attached to a Maven build before publication.
