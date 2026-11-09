@@ -93,6 +93,11 @@
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <revision>0.3.0-SNAPSHOT</revision>
+    <!-- Prepare release bundles locally unless upload is explicitly selected. -->
+    <central.skipUpload>true</central.skipUpload>
+    <central.publishingServerId>central-sbom-verifier</central.publishingServerId>
+    <central.autoPublish>false</central.autoPublish>
+    <central.waitUntil>validated</central.waitUntil>
 
     <!-- `bnd-maven-plugin` 7.x requires a Maven version `3.8.1` or higher -->
     <javaBuildVersion>17</javaBuildVersion>
@@ -114,7 +119,7 @@
     <apache-rat-plugin.version>0.16.1</apache-rat-plugin.version>
     <bnd-baseline-maven-plugin.version>7.1.0</bnd-baseline-maven-plugin.version>
     <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
-    <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
+    <central-publishing-maven-plugin.version>0.12.0</central-publishing-maven-plugin.version>
     <commons-codec.version>1.18.0</commons-codec.version>
     <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
     <flatten-maven-plugin.version>1.7.0</flatten-maven-plugin.version>
@@ -1025,12 +1030,25 @@
             <extensions>true</extensions>
             <configuration>
               <excludeArtifacts>sbom-verifier-parent</excludeArtifacts>
-              <publishingServerId>central</publishingServerId>
+              <publishingServerId>${central.publishingServerId}</publishingServerId>
+              <skipUpload>${central.skipUpload}</skipUpload>
+              <autoPublish>${central.autoPublish}</autoPublish>
+              <waitUntil>${central.waitUntil}</waitUntil>
             </configuration>
           </plugin>
 
         </plugins>
       </build>
+    </profile>
+
+    <!-- Explicit opt-in for an approved Maven upload and automatic Central publication. -->
+    <profile>
+      <id>central-upload</id>
+      <properties>
+        <central.skipUpload>false</central.skipUpload>
+        <central.autoPublish>true</central.autoPublish>
+        <central.waitUntil>published</central.waitUntil>
+      </properties>
     </profile>
 
     <!-- Dummy profile to trigger updates for these dependencies -->
