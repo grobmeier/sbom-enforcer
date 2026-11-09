@@ -1,0 +1,38 @@
+#
+# Copyright © 2025 Christian Grobmeier, Piotr P. Karwasz
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+name: Release preflight
+on:
+  pull_request: {}
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Setup Java
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Test release command without upload
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools -p 'test_*.py' -v
+      - name: Verify release profile without signing or upload
+        run: ./mvnw -B -Prelease -Drevision=0.3.0 -Dgpg.skip=true verify

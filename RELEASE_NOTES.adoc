@@ -1,0 +1,42 @@
+////
+Copyright © 2026 Christian Grobmeier
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+////
+
+= SBOM Verifier 0.3.0
+
+Status: release preparation; not published.
+
+== Coordinates and migration
+
+The maintained project is named SBOM Verifier. Its coordinates are
+`de.grobmeier:sbom-verifier-maven-plugin:0.3.0` and its goal prefix is `sbom-verifier`.
+Java extensions must update imports from `io.github.sbom.enforcer` to
+`de.grobmeier.sbom.verifier` and recompile. Existing rule names and settings remain unchanged.
+
+== Changes
+
+* Add `completeness` to check the project identity and resolved compile/runtime dependency coverage, including transitive dependencies. Provided, test, and system dependencies are excluded. Extra SBOM components are allowed.
+* Add `requireSbom` to fail when the current module has no attached supported SBOM. Its default is `false`.
+* Distinguish unavailable references from broken references. HTTP 429, HTTP 5xx, and connection failures warn by default. Set `failOnUnavailable=true` for strict handling. Dependency findings also require `failOnDependencies=true`.
+* Report reference checks skipped after the per-host connection failure limit.
+* Fix Maven 3.9.6 configuration of the private local repository path.
+* Correct configuration examples and replace live public URLs in integration tests with deterministic cases.
+
+== Supported scope
+
+The plugin checks attached CycloneDX XML and JSON documents for each Maven module.
+Completeness compares the Maven dependency graph with the SBOM. It does not inspect repackaged archive contents, establish vulnerability status, or establish CRA conformity.
+
+The implementation passed JJSON's full reactor and Time & Bill's packaging/SBOM checks. Time & Bill application tests were skipped.
