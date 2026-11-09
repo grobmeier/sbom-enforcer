@@ -28,16 +28,11 @@ The `check` goal runs in `verify`. Set `requireSbom=true` to fail when no suppor
 
 See https://grobmeier.solutions/solutions/sbom-enforcer/[the project website] and link:maven-plugin/src/site/asciidoc/rules.adoc[the current rule reference].
 
-== Install the current source
+== Published release
 
-Completeness and reference-availability handling are included in the current source. They are not included in the original published `0.2.0` release. Use Java 21 to build and install the current `0.3.0-SNAPSHOT` locally:
+Version `0.3.0` is available from https://repo.maven.apache.org/maven2/de/grobmeier/sbom-verifier-maven-plugin/0.3.0/[Maven Central]. It includes completeness checking and reference-availability handling. Maven downloads the plugin when you use the configuration below. No local source installation is required.
 
-[source,shell]
-----
-git clone https://github.com/grobmeier/sbom-enforcer.git
-cd sbom-enforcer
-./mvnw -B install
-----
+See link:RELEASE_NOTES.adoc[the 0.3.0 release notes] for changes and migration details.
 
 == Configure your Maven project
 
@@ -60,7 +55,7 @@ Add both plugins under `<build><plugins>` in each module you want to check. Cycl
 <plugin>
   <groupId>de.grobmeier</groupId>
   <artifactId>sbom-verifier-maven-plugin</artifactId>
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.3.0</version>
   <executions>
     <execution>
       <id>check-sbom</id>
@@ -82,7 +77,7 @@ Add both plugins under `<build><plugins>` in each module you want to check. Cycl
 </plugin>
 ----
 
-Run `mvn verify` in your project. A clean CI runner needs the plugin installed before it can resolve the local snapshot. If the module skips deployment, set CycloneDX's `skipNotDeployed` to `false` to generate its SBOM.
+Run `mvn verify` in your project. If the module skips deployment, set CycloneDX's `skipNotDeployed` to `false` to generate its SBOM.
 
 == Scope
 
@@ -94,9 +89,9 @@ The fork preserves the Apache 2.0 license and original contributor notices. See 
 
 == Migrate from SBOM Enforcer
 
-Use `de.grobmeier:sbom-verifier-maven-plugin:0.3.0-SNAPSHOT` after installing this source build. Rule names and settings remain the same. Java extensions must update imports from `io.github.sbom.enforcer` to `de.grobmeier.sbom.verifier` and recompile. The plugin goal prefix is now `sbom-verifier`.
+Use `de.grobmeier:sbom-verifier-maven-plugin:0.3.0` from Maven Central. Rule names and settings remain the same. Java extensions must update imports from `io.github.sbom.enforcer` to `de.grobmeier.sbom.verifier` and recompile. The plugin goal prefix is now `sbom-verifier`.
 
-The repository URL remains https://github.com/grobmeier/sbom-enforcer[the existing fork]. The original published coordinates remain separate from this renamed project. This snapshot is not published to Maven Central.
+The repository URL remains https://github.com/grobmeier/sbom-enforcer[the existing fork]. The original published coordinates remain separate from this renamed project.
 
 == Development and releases
 

@@ -16,7 +16,7 @@ limitations under the License.
 
 = SBOM Verifier 0.3.0
 
-Status: release preparation; not published.
+Status: published to Maven Central on 9 November 2026.
 
 == Coordinates and migration
 
