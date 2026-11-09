@@ -39,7 +39,7 @@
   </distributionManagement>
 
   <properties>
-    <maven-plugin-report-plugin.version>3.15.1</maven-plugin-report-plugin.version>
+    <maven-plugin-report-plugin.version>3.16.0</maven-plugin-report-plugin.version>
 
     <!-- Site attributes -->
     <project-version>${project.version}</project-version>
@@ -117,13 +117,13 @@
     <dependency>
       <groupId>org.cyclonedx</groupId>
       <artifactId>cyclonedx-core-java</artifactId>
-      <version>11.0.1</version>
+      <version>13.4.0</version>
     </dependency>
 
     <dependency>
       <groupId>org.jspecify</groupId>
       <artifactId>jspecify</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1</version>
     </dependency>
 
     <dependency>
@@ -185,7 +185,7 @@
       <plugin>
         <groupId>org.eclipse.sisu</groupId>
         <artifactId>sisu-maven-plugin</artifactId>
-        <version>0.9.0.M4</version>
+        <version>1.1.1</version>
         <executions>
           <execution>
             <id>generate-sisu-descriptor</id>
@@ -214,7 +214,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-invoker-plugin</artifactId>
-        <version>3.9.0</version>
+        <version>3.10.1</version>
         <executions>
           <execution>
             <id>invoke-its</id>
