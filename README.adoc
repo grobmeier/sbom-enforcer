@@ -97,3 +97,8 @@ The fork preserves the Apache 2.0 license and original contributor notices. See 
 Use `de.grobmeier:sbom-verifier-maven-plugin:0.3.0-SNAPSHOT` after installing this source build. Rule names and settings remain the same. Java extensions must update imports from `io.github.sbom.enforcer` to `de.grobmeier.sbom.verifier` and recompile. The plugin goal prefix is now `sbom-verifier`.
 
 The repository URL remains https://github.com/grobmeier/sbom-enforcer[the existing fork]. The original published coordinates remain separate from this renamed project. This snapshot is not published to Maven Central.
+
+== Development and releases
+
+See link:docs/DEVELOPING.md[the developer setup guide] for local builds, source locations, consumer checks, and troubleshooting.
+See link:docs/RELEASING.md[the release guide] for GPG setup, Central credentials, and automatic Maven publication.

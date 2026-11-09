@@ -37,6 +37,25 @@ Run these commands from the repository root on the release workstation. Use a su
 
 The helper verifies coordinates, plugin prefix, POM metadata, source/Javadoc contents, and all six signatures. It includes the flattened POM, plugin JAR, sources, Javadoc, and CycloneDX XML/JSON attachments with checksums. The flattened POM has no parent dependency, so the build parent is excluded. This is a local preflight, not Central Portal validation.
 
+## Unlock the signing key
+
+Verify the full primary fingerprint of the intended release key. On the owner's workstation, the previously validated Maven release key ends in `A5CC90DB`. Its identity differs from the Git commit signing key. Confirm current key configuration rather than selecting a key only because it signed a previous commit.
+
+```sh
+gpg --fingerprint A5CC90DB
+```
+
+Set `RELEASE_SIGNING_KEY` to that full primary fingerprint in the release shell. To unlock it through the GPG agent, run this harmless signing check in Terminal:
+
+```sh
+export GPG_TTY=$(tty)
+printf 'SBOM Verifier release signing check\n' |
+  gpg --local-user "$RELEASE_SIGNING_KEY" --armor --clearsign \
+  > /tmp/sbom-verifier-signing-check.asc
+```
+
+Enter a passphrase or hardware-key PIN only in the GPG prompt. Do not put it in chat, Git, or command arguments. The command can succeed without a prompt if the agent or keychain already has access. The agent cache can expire; successful signing now does not guarantee later access. Do not change the key's passphrase to make automation work.
+
 ## Automatic Maven upload and publication
 
 The `central-upload` profile follows the JJSON publication pattern: upload the Maven-built bundle, publish it after Central validation, and wait for the `published` result. No manual ZIP upload or Portal Publish click is required for this path.
